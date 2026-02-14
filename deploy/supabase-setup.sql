@@ -42,3 +42,17 @@ GRANT SELECT ON ALL TABLES IN SCHEMA incidents TO anon, authenticated;
 GRANT SELECT ON ALL TABLES IN SCHEMA map TO anon, authenticated;
 GRANT SELECT ON ALL TABLES IN SCHEMA police TO anon, authenticated;
 GRANT SELECT ON ALL TABLES IN SCHEMA street TO anon, authenticated;
+
+-- 5. Street crossing table (computed intersections)
+CREATE TABLE IF NOT EXISTS street.street_crossing (
+    id              serial PRIMARY KEY,
+    geom            geometry(Point, 3857) NOT NULL,
+    street_name_1   text NOT NULL,
+    street_name_2   text NOT NULL,
+    display_text    text NOT NULL,
+    is_valid        boolean NOT NULL DEFAULT true
+);
+
+CREATE INDEX IF NOT EXISTS idx_street_crossing_geom ON street.street_crossing USING gist (geom);
+CREATE INDEX IF NOT EXISTS idx_street_crossing_street_name_1 ON street.street_crossing (street_name_1);
+CREATE INDEX IF NOT EXISTS idx_street_crossing_street_name_2 ON street.street_crossing (street_name_2);
