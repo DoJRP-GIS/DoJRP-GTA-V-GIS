@@ -55,7 +55,12 @@ CREATE INDEX idx_street_crossing_street_name_2 ON street.street_crossing (street
 4. Deduplicate: `GROUP BY (street_name_1, street_name_2, ST_SnapToGrid(geom, 1))` — 1m snap handles floating-point noise
 5. Representative point: `ST_Centroid(ST_Collect(geom))` per group
 6. Generate `display_text`: `street_name_1 || ' & ' || street_name_2`
-7. Auto-flag `is_valid = false` where either source segment has `road_class` in (`A15`, `A63`, `B11`, `B12`, `B13`, `B19`) — likely grade-separated (freeways, ramps, railroads)
+7. Determine `is_valid` using name-aware connectivity analysis:
+   - Railroad crossings (B1x) → always `false`
+   - No highway/ramp involved → always `true`
+   - Ramp connected to its parent road (ramp name contains the other street name) → `true`
+   - Ramp split/merge (two ramps share origin or destination text via `RAMP TO`) → `true`
+   - Remaining highway/ramp crossings → `false` (likely overpass)
 
 Idempotent — truncates `street.street_crossing` before repopulating.
 
