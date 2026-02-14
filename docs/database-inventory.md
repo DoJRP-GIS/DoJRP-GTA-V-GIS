@@ -554,6 +554,29 @@
 | --- | --- | --- | --- |
 | street_dissolved_pkey | PRIMARY KEY | id |  |
 
+### `street.street_crossing`
+
+- **Rows:** 2,175
+
+Computed intersection points where streets meet. Canonical alphabetical ordering (street_name_1 < street_name_2). N-way intersections produce pairwise rows. is_valid auto-flagged false for likely grade-separated crossings (freeways A15, ramps A63, railroads B1x).
+
+**Columns**
+
+| Column | Type | Nullable | Default | Max Length |
+| --- | --- | --- | --- | --- |
+| id | integer | NO | nextval('street.street_crossing_id_seq'::regclass) |  |
+| geom | USER-DEFINED | NO |  |  |
+| street_name_1 | text | YES |  |  |
+| street_name_2 | text | YES |  |  |
+| display_text | text | YES |  |  |
+| is_valid | boolean | YES | true |  |
+
+**Constraints**
+
+| Constraint | Type | Columns | FK Reference |
+| --- | --- | --- | --- |
+| street_crossing_pkey | PRIMARY KEY | id |  |
+
 ### `street.street_segment`
 
 - **Rows:** 9,663
@@ -762,6 +785,14 @@
 - **Extent:** `POLYGON((-3217.3536357349035 -3355.060647551135,-3217.3536357349035 7011.699609476209,3818.6702215793157 7011.699609476209,3818.6702215793157 -3355.060647551135,-3217.3536357349035 -3355.060647551135))`
 - **Sample:** `MULTILINESTRING((-590.3415123052756 6085.524747411921,-572.7090193672908 6062.796158249085,-555.586136051791 6045.367509160094,-544.4766462816156 6034.56378516341,-532.4498591909669 6030.996517806014,...`
 
+### `street.street_crossing` — `geom`
+
+- **Geometry Type:** POINT
+- **SRID:** 3857
+- **Dimensions:** 2
+- **SRS:** EPSG:3857
+- **Proj4:** `+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs`
+
 ### `street.street_segment` — `geom`
 
 - **Geometry Type:** MULTILINESTRING
@@ -823,6 +854,10 @@
 | public.us_rules | pk_us_rules | 112 kB | btree | USING btree (id) |
 | street.street_dissolved | idx_street_dissolved_geom | 64 kB | gist (spatial) | USING gist (geom) |
 | street.street_dissolved | street_dissolved_pkey | 48 kB | btree | USING btree (id) |
+| street.street_crossing | idx_street_crossing_geom | 56 kB | gist (spatial) | USING gist (geom) |
+| street.street_crossing | idx_street_crossing_street_name_1 | 56 kB | btree | USING btree (street_name_1) |
+| street.street_crossing | idx_street_crossing_street_name_2 | 56 kB | btree | USING btree (street_name_2) |
+| street.street_crossing | street_crossing_pkey | 48 kB | btree | USING btree (id) |
 | street.street_segment | idx_street_segment_geom | 392 kB | gist (spatial) | USING gist (geom) |
 | street.street_segment | idx_street_segment_name | 104 kB | btree | USING btree (street_name) |
 | street.street_segment | street_segment_pkey | 232 kB | btree | USING btree (id) |
@@ -950,8 +985,8 @@ _No custom functions found (PostGIS built-ins excluded)._
 
 ## Summary Statistics
 
-- **Total Tables:** 22
-- **Spatial Tables:** 17
+- **Total Tables:** 23
+- **Spatial Tables:** 18
 - **Non-Spatial Tables:** 5
 
 ### Size Breakdown
@@ -965,6 +1000,7 @@ _No custom functions found (PostGIS built-ins excluded)._
 | fire.fire_box | 1472 kB | 1,610 |
 | police.police_zone | 1112 kB | 827 |
 | street.street_dissolved | 600 kB | 1,258 |
+| street.street_crossing | 504 kB | 2,175 |
 | public.us_rules | 456 kB | 4,369 |
 | map.neighborhood | 448 kB | 100 |
 | address.building_cids | 416 kB | 1,446 |
@@ -981,5 +1017,5 @@ _No custom functions found (PostGIS built-ins excluded)._
 | map.gang_territory | 96 kB | 75 |
 | fire.fire_station | 40 kB | 9 |
 
-**Total Row Count:** 55,490
+**Total Row Count:** 57,665
 

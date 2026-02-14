@@ -14,10 +14,10 @@ DoJRP-GTA-V-GIS is a GIS data platform for a DoJRP (Department of Justice Rolepl
 - **API:** Supabase PostgREST (auto-generated REST) + custom GeoJSON SQL functions
 - **Database Client:** pg v8.18.0
 
-## Database Schema (18 tables, 50 MB)
+## Database Schema (19 tables, 50 MB)
 
 - **address** (2): `address_point` (18,945 rows), `building_cids` (1,446 — FK to address_point)
-- **street** (2): `street_segment` (9,663), `street_dissolved` (1,258)
+- **street** (3): `street_segment` (9,663), `street_dissolved` (1,258), `street_crossing` (2,175)
 - **map** (8): `jurisdiction` (36), `neighborhood` (100), `area_of_patrol` (30), `gang_territory` (75), `zip_code` (92), `postal_zone` (1,044), `point_of_interest` (453), `transit_route` (84)
 - **fire** (4): `fire_district` (194), `fire_box` (1,610), `fire_station` (9), `water_supply` (1,342)
 - **police** (1): `police_zone` (827)
@@ -40,7 +40,8 @@ There are no test, lint, or build commands configured.
 ## Key Files
 
 - `deploy/supabase-setup.sql` — Creates schemas, grants permissions for PostgREST
-- `deploy/supabase-geojson.sql` — GeoJSON API functions (17 endpoints)
+- `deploy/supabase-geojson.sql` — GeoJSON API functions (18 endpoints)
+- `deploy/supabase-compute-crossings.sql` — Street crossing computation function
 - `deploy/migrate-data.sh` — pg_dump local → pg_restore to Supabase
 - `docs/database-inventory.md` — Full schema documentation
 - `.env.example` — Connection variable template

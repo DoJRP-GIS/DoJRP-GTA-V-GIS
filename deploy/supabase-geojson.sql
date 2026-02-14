@@ -81,6 +81,47 @@ AS $$
     FROM (SELECT * FROM street.street_dissolved LIMIT lim) sub;
 $$;
 
+CREATE OR REPLACE FUNCTION public.geojson_street_crossings(
+    bbox_xmin float DEFAULT NULL,
+    bbox_ymin float DEFAULT NULL,
+    bbox_xmax float DEFAULT NULL,
+    bbox_ymax float DEFAULT NULL,
+    street_name_filter text DEFAULT NULL,
+    include_invalid boolean DEFAULT false,
+    lim int DEFAULT 1000
+)
+RETURNS jsonb
+LANGUAGE sql STABLE
+AS $$
+    SELECT jsonb_build_object(
+        'type', 'FeatureCollection',
+        'features', COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'type', 'Feature',
+                'id', id,
+                'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
+                'properties', jsonb_build_object(
+                    'id', id,
+                    'street_name_1', street_name_1,
+                    'street_name_2', street_name_2,
+                    'display_text', display_text,
+                    'is_valid', is_valid
+                )
+            )
+        ), '[]'::jsonb)
+    )
+    FROM (
+        SELECT * FROM street.street_crossing s
+        WHERE (bbox_xmin IS NULL OR s.geom && ST_Transform(
+            ST_MakeEnvelope(bbox_xmin, bbox_ymin, bbox_xmax, bbox_ymax, 4326), 3857))
+          AND (street_name_filter IS NULL
+               OR s.street_name_1 ILIKE '%' || street_name_filter || '%'
+               OR s.street_name_2 ILIKE '%' || street_name_filter || '%')
+          AND (include_invalid OR s.is_valid = true)
+        LIMIT lim
+    ) sub;
+$$;
+
 -- === MAP ===
 
 CREATE OR REPLACE FUNCTION public.geojson_jurisdictions()
@@ -512,6 +553,7 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.geojson_street_segments TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.geojson_street_dissolved TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.geojson_street_crossings TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.geojson_jurisdictions TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.geojson_neighborhoods TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.geojson_gang_territories TO anon, authenticated;
