@@ -12,6 +12,7 @@ The existing cross-street data (`cross_street_low/high` on `street_segment`, `cr
 - **Reproducible:** Re-runnable computation from source geometry, no manual data entry
 - **N-way intersections:** Where 3+ streets meet, produce pairwise rows (3 streets = 3 rows, 4 = 6)
 - **Multiple crossings:** If two streets genuinely cross at 2+ distinct locations, store each
+- **Grade separation:** Auto-flag likely invalid crossings (bridges, overpasses) based on road class; manual review overrides
 
 ## Approach: SQL Computation + SQL Populate (Approach C)
 
@@ -30,7 +31,8 @@ CREATE TABLE street.street_crossing (
     geom            geometry(Point, 3857) NOT NULL,
     street_name_1   text NOT NULL,  -- alphabetically first
     street_name_2   text NOT NULL,  -- alphabetically second
-    display_text    text NOT NULL   -- "Elm St & Main St"
+    display_text    text NOT NULL,  -- "Elm St & Main St"
+    is_valid        boolean NOT NULL DEFAULT true
 );
 
 CREATE INDEX idx_street_crossing_geom ON street.street_crossing USING gist (geom);
@@ -41,6 +43,7 @@ CREATE INDEX idx_street_crossing_street_name_2 ON street.street_crossing (street
 - **Canonical ordering:** `street_name_1 < street_name_2` alphabetically
 - **Pairwise rows:** N-way intersections produce N*(N-1)/2 rows sharing the same geometry
 - **No unique constraint** on `(street_name_1, street_name_2)` — same pair can cross at multiple distinct locations
+- **`is_valid`:** `true` by default. Auto-set to `false` where either segment is a freeway (A15), ramp (A63), or railroad (B1x) — likely grade-separated. Manual review can override in either direction.
 
 ## Computation Logic
 
@@ -52,6 +55,7 @@ CREATE INDEX idx_street_crossing_street_name_2 ON street.street_crossing (street
 4. Deduplicate: `GROUP BY (street_name_1, street_name_2, ST_SnapToGrid(geom, 1))` — 1m snap handles floating-point noise
 5. Representative point: `ST_Centroid(ST_Collect(geom))` per group
 6. Generate `display_text`: `street_name_1 || ' & ' || street_name_2`
+7. Auto-flag `is_valid = false` where either source segment has `road_class` in (`A15`, `A63`, `B11`, `B12`, `B13`, `B19`) — likely grade-separated (freeways, ramps, railroads)
 
 Idempotent — truncates `street.street_crossing` before repopulating.
 
@@ -71,7 +75,8 @@ RETURNS jsonb
 
 - `street_name_filter` matches against EITHER `street_name_1` or `street_name_2`
 - Geometry transformed to SRID 4326 for GeoJSON output
-- Returns FeatureCollection with properties: `id`, `street_name_1`, `street_name_2`, `display_text`
+- Returns FeatureCollection with properties: `id`, `street_name_1`, `street_name_2`, `display_text`, `is_valid`
+- By default only returns `is_valid = true` crossings; optional parameter to include all
 
 ## Deliverables
 
