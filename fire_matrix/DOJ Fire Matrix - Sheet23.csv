@@ -1,0 +1,21 @@
+Engines,E,7
+Trucks,T,8
+Rescue/Squads,R,9
+ALS Transports,M,10
+BLS Transports,A,11
+EMS Officer,EMSO,12
+Tankers,TNK,13
+Brush Engines,BE,14
+Patrol Truck,PT,15
+Knight Truck,KT,16
+Wildland,WL,17
+Attack Tanker,AT,18
+ARFF,CR,19
+HM,HM,20
+USAR,USAR,21
+SW,SW,22
+AR,LF,23
+HELO,HELO,24
+PLANE,PLANE,25
+Chief,CH,26
+FMO,FMO,27

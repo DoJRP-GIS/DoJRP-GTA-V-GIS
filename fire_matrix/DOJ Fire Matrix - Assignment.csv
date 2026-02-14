@@ -1,0 +1,75 @@
+6,2,3,,,,6,8,9,,,,6,14,15,,
+69D06,Number,FIRE|HOUSE / FJ,Pre-Alert,,,,Number,#N/A,Pre-Alert,,,71B05H,Number,FIRE|VEH|HM / FVH,Pre-Alert,
+Engines,3,E002 E012 E001,Fire Administrator 2,,,Engines,,,,,,Engines,1,E001,,
+Trucks,1,T001,,,,Trucks,,,,,,Trucks,0,,,
+Rescue/Squads,1,R020,,,,Rescue/Squads,,,,,,Rescue/Squads,0,,,
+ALS Transports,1,M002,,,,ALS Transports,,,,,,ALS Transports,0,,,
+BLS Transports,0,,,,,BLS Transports,,,,,,BLS Transports,0,,,
+EMS Officer,0,,,,,EMS Officer,,,,,,EMS Officer,0,,,
+Tankers,0,,,,,Tankers,,,,,,Tankers,0,,,
+Brush Engines,0,,,,,Brush Engines,,,,,,Brush Engines,0,,,
+Patrol Truck,0,,,,,Patrol Truck,,,,,,Patrol Truck,0,,,
+Knight Truck,0,,,,,Knight Truck,,,,,,Knight Truck,0,,,
+Wildland,0,,,,,Wildland,,,,,,Wildland,0,,,
+Attack Tanker,0,,,,,Attack Tanker,,,,,,Attack Tanker,0,,,
+ARFF,0,,,,,ARFF,,,,,,ARFF,0,,,
+HM,0,,,,,HM,,,,,,HM,1,HM20,,
+USAR,0,,,,,USAR,,,,,,USAR,0,,,
+SW,0,,,,,SW,,,,,,SW,0,,,
+AR,0,,,,,AR,,,,,,AR,0,,,
+HELO,0,,,,,HELO,,,,,,HELO,0,,,
+PLANE,0,,,,,PLANE,,,,,,PLANE,0,,,
+Chief,1,BC22,,,,Chief,,,,,,Chief,1,BC21,,
+FMO,0,,,,,FMO,,,,,,FMO,1,[FM01],,
+NOTIF,,,,,,NOTIF,,,,,,NOTIF,[DSO] [FMO],[DSO] [FMO],,
+Full Assignment,,E002 E012 E001 T001 R020 M002 BC22 [69D06],Fire Administrator 2?,#VALUE!,,Full Assignment,,[],?,#VALUE!,,Full Assignment,,E001 HM20 BC21 [FM01] [DSO] [FMO] [71B05H],,#VALUE!
+-19,2,3,,,,-19,8,9,,,,-19,14,15,,
+69E00R,Number,FIRE|BLDG|TRAP / FJT,Pre-Alert,,,,Number,#N/A,Pre-Alert,,,27D02G,Number,SHOT|w/PD|ALS2 / AL2D,Pre-Alert,
+Engines,3,#N/A,,,,Engines,,,,,,Engines,1,E002,,
+Trucks,1,#N/A,,,,Trucks,,,,,,Trucks,0,,,
+Rescue/Squads,1,#N/A,,,,Rescue/Squads,,,,,,Rescue/Squads,0,,,
+ALS Transports,2,#N/A,,,,ALS Transports,,,,,,ALS Transports,1,M002,,
+BLS Transports,0,,,,,BLS Transports,,,,,,BLS Transports,0,,,
+EMS Officer,0,,,,,EMS Officer,,,,,,EMS Officer,1,S001,,
+Tankers,0,,,,,Tankers,,,,,,Tankers,0,,,
+Brush Engines,0,,,,,Brush Engines,,,,,,Brush Engines,0,,,
+Patrol Truck,0,,,,,Patrol Truck,,,,,,Patrol Truck,0,,,
+Knight Truck,0,,,,,Knight Truck,,,,,,Knight Truck,0,,,
+Wildland,0,,,,,Wildland,,,,,,Wildland,0,,,
+Attack Tanker,0,,,,,Attack Tanker,,,,,,Attack Tanker,0,,,
+ARFF,0,,,,,ARFF,,,,,,ARFF,0,,,
+HM,0,,,,,HM,,,,,,HM,0,,,
+USAR,0,,,,,USAR,,,,,,USAR,0,,,
+SW,0,,,,,SW,,,,,,SW,0,,,
+AR,0,,,,,AR,,,,,,AR,0,,,
+HELO,0,,,,,HELO,,,,,,HELO,0,,,
+PLANE,0,,,,,PLANE,,,,,,PLANE,0,,,
+Chief,1,#N/A,,,,Chief,,,,,,Chief,0,,,
+FMO,0,,,,,FMO,,,,,,FMO,0,,,
+NOTIF,,,,,,NOTIF,,,,,,NOTIF,[PD],[PD],,
+Full Assignment,,#N/A,,#N/A,,Full Assignment,,[],,#VALUE!,,Full Assignment,,E002 M002 S001 [PD] [27D02G],,#VALUE!
+-44,2,3,,,,-44,8,9,,,,-44,14,15,,
+1ALM,Number,1ST ALARM / 1ST,Pre-Alert,,,NATGASLEAKMAJOR,Number,GASMAJOR / GASFULL,Pre-Alert,,,#NAME?,Number,#NAME?,Pre-Alert,#NAME?
+Engines,3,#N/A,,,,Engines,3,#N/A,,,,Engines,#NAME?,#NAME?,,#NAME?
+Trucks,1,#N/A,,,,Trucks,1,#N/A,,,,Trucks,#NAME?,#NAME?,,#NAME?
+Rescue/Squads,0,,,,,Rescue/Squads,1,#N/A,,,,Rescue/Squads,#NAME?,#NAME?,,#NAME?
+ALS Transports,1,#N/A,,,,ALS Transports,1,#N/A,,,,ALS Transports,#NAME?,#NAME?,,#NAME?
+BLS Transports,0,,,,,BLS Transports,0,,,,,BLS Transports,#NAME?,#NAME?,,#NAME?
+EMS Officer,0,,,,,EMS Officer,0,,,,,EMS Officer,#NAME?,#NAME?,,#NAME?
+Tankers,0,,,,,Tankers,0,,,,,Tankers,#NAME?,#NAME?,,#NAME?
+Brush Engines,0,,,,,Brush Engines,0,,,,,Brush Engines,#NAME?,#NAME?,,#NAME?
+Patrol Truck,0,,,,,Patrol Truck,0,,,,,Patrol Truck,#NAME?,#NAME?,,#NAME?
+Knight Truck,0,,,,,Knight Truck,0,,,,,Knight Truck,#NAME?,#NAME?,,#NAME?
+Wildland,0,,,,,Wildland,0,,,,,Wildland,#NAME?,#NAME?,,#NAME?
+Attack Tanker,0,,,,,Attack Tanker,0,,,,,Attack Tanker,#NAME?,#NAME?,,#NAME?
+ARFF,0,,,,,ARFF,0,,,,,ARFF,#NAME?,#NAME?,,#NAME?
+HM,0,,,,,HM,1,#N/A,,,,HM,#NAME?,#NAME?,,#NAME?
+USAR,0,,,,,USAR,0,,,,,USAR,#NAME?,#NAME?,,#NAME?
+SW,0,,,,,SW,0,,,,,SW,#NAME?,#NAME?,,#NAME?
+AR,0,,,,,AR,0,,,,,AR,#NAME?,#NAME?,,#NAME?
+HELO,0,,,,,HELO,0,,,,,HELO,#NAME?,#NAME?,,#NAME?
+PLANE,0,,,,,PLANE,0,,,,,PLANE,#NAME?,#NAME?,,#NAME?
+Chief,1,#N/A,,,,Chief,1,#N/A,,,,Chief,#NAME?,#NAME?,,#NAME?
+FMO,1,#N/A,,,,FMO,0,,,,,FMO,#NAME?,#NAME?,,#NAME?
+NOTIF,[FMO],[FMO],,,,NOTIF,[DWP] [DSO],[DWP] [DSO],,,,NOTIF,#NAME?,#NAME?,,#NAME?
+Full Assignment,,#N/A,,#N/A,,Full Assignment,,#N/A,,#N/A,,Full Assignment,,#NAME?,,#NAME?

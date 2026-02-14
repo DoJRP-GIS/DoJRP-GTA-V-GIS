@@ -1,0 +1,33 @@
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+
+# Database credentials
+**/db_credentials.json
+**/database.config.js
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temp and inspection scripts (contains DB info)
+inspect_db.js
+inspect_*.js
+review_db.js
+migrate/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+*.log
