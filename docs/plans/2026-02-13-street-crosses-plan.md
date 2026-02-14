@@ -8,7 +8,7 @@
 
 **Tech Stack:** PostgreSQL 15, PostGIS 3.3, Supabase PostgREST
 
-**Local DB:** `localhost:5433`, user `postgres`, password `567856`, database `gisdb`
+**Local DB:** `localhost:5433`, user `postgres`, database `gisdb` (see `.env` for password)
 
 **psql path:** `"C:/Program Files/PostgreSQL/18/bin/psql.exe"`
 
@@ -42,7 +42,7 @@ CREATE INDEX IF NOT EXISTS idx_street_crossing_street_name_2 ON street.street_cr
 **Step 2: Verify DDL runs on local database**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
 CREATE TABLE IF NOT EXISTS street.street_crossing (
     id              serial PRIMARY KEY,
     geom            geometry(Point, 3857) NOT NULL,
@@ -62,7 +62,7 @@ Expected: `CREATE TABLE` / `CREATE INDEX` (no errors)
 **Step 3: Verify table exists**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "\d street.street_crossing"
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "\d street.street_crossing"
 ```
 
 Expected: Table with columns `id`, `geom`, `street_name_1`, `street_name_2`, `display_text`, `is_valid`
@@ -206,7 +206,7 @@ Use the second (corrected) version.
 **Step 2: Deploy the function to local database**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -f deploy/supabase-compute-crossings.sql
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -f deploy/supabase-compute-crossings.sql
 ```
 
 Expected: `CREATE FUNCTION`
@@ -214,7 +214,7 @@ Expected: `CREATE FUNCTION`
 **Step 3: Run the computation**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "SELECT compute_street_crossings();"
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "SELECT compute_street_crossings();"
 ```
 
 Expected: Returns a row count (the number of crossing rows inserted). Should be in the hundreds to low thousands.
@@ -222,7 +222,7 @@ Expected: Returns a row count (the number of crossing rows inserted). Should be 
 **Step 4: Verify results**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
 SELECT COUNT(*) AS total,
        COUNT(*) FILTER (WHERE is_valid) AS valid,
        COUNT(*) FILTER (WHERE NOT is_valid) AS flagged
@@ -235,7 +235,7 @@ Expected: Non-zero counts. `flagged` should be > 0 (freeways/ramps/railroads aut
 **Step 5: Spot-check some results**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
 SELECT display_text, is_valid FROM street.street_crossing ORDER BY display_text LIMIT 20;
 "
 ```
@@ -245,7 +245,7 @@ Expected: Alphabetically ordered display text like "Adam's Apple Blvd & Alta St"
 **Step 6: Verify bidirectional lookups work**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
 -- Pick a street that appears and search both columns
 SELECT display_text, is_valid
 FROM street.street_crossing
@@ -259,7 +259,7 @@ Expected: All intersections involving streets matching "alta" regardless of whic
 **Step 7: Verify idempotency**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
 SELECT compute_street_crossings();
 SELECT COUNT(*) FROM street.street_crossing;
 "
@@ -337,7 +337,7 @@ GRANT EXECUTE ON FUNCTION public.geojson_street_crossings TO anon, authenticated
 **Step 2: Deploy to local database**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -f deploy/supabase-geojson.sql
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -f deploy/supabase-geojson.sql
 ```
 
 Expected: Multiple `CREATE FUNCTION` outputs (all 18 functions recreated), no errors.
@@ -345,7 +345,7 @@ Expected: Multiple `CREATE FUNCTION` outputs (all 18 functions recreated), no er
 **Step 3: Test the endpoint — default (valid only)**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
 SELECT jsonb_array_length(result->'features') AS feature_count
 FROM geojson_street_crossings() AS result;
 "
@@ -356,7 +356,7 @@ Expected: A number matching the `valid` count from Task 2 Step 4 (capped at 1000
 **Step 4: Test the endpoint — with include_invalid**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
 SELECT jsonb_array_length(result->'features') AS feature_count
 FROM geojson_street_crossings(include_invalid := true, lim := 5000) AS result;
 "
@@ -367,7 +367,7 @@ Expected: A number matching the `total` count from Task 2 Step 4.
 **Step 5: Test the endpoint — street name filter**
 
 ```bash
-PGPASSWORD=567856 "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
+PGPASSWORD=$LOCAL_DB_PASSWORD "C:/Program Files/PostgreSQL/18/bin/psql.exe" -h localhost -p 5433 -U postgres -d gisdb -c "
 SELECT result->'features'->0->'properties'->>'display_text' AS first_match
 FROM geojson_street_crossings(street_name_filter := 'Alta') AS result;
 "

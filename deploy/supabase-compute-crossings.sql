@@ -4,6 +4,9 @@
 -- Idempotent: truncates and repopulates street.street_crossing on each call.
 --
 -- Usage: SELECT compute_street_crossings();
+--
+-- NOTE: No GRANT EXECUTE — this function mutates data and should only be
+-- called by the database owner (via SQL Editor or migration scripts).
 -- =============================================================================
 
 CREATE OR REPLACE FUNCTION public.compute_street_crossings()
@@ -13,10 +16,12 @@ AS $$
 DECLARE
     row_count integer;
 BEGIN
+    -- Runs in a single transaction: TRUNCATE + INSERT are atomic
     TRUNCATE street.street_crossing RESTART IDENTITY;
 
     INSERT INTO street.street_crossing (geom, street_name_1, street_name_2, display_text, is_valid)
-    WITH pairs AS (
+    WITH raw AS (
+        -- Compute intersection geometry once per segment pair
         SELECT
             ST_Intersection(a.geom, b.geom) AS raw_geom,
             LEAST(a.street_name, b.street_name) AS street_name_1,
@@ -27,7 +32,11 @@ BEGIN
         JOIN street.street_segment b
             ON ST_Intersects(a.geom, b.geom)
             AND a.street_name < b.street_name
-        WHERE GeometryType(ST_Intersection(a.geom, b.geom)) IN ('POINT', 'MULTIPOINT')
+    ),
+    pairs AS (
+        -- Filter to point-type intersection results only
+        SELECT * FROM raw
+        WHERE GeometryType(raw_geom) IN ('POINT', 'MULTIPOINT')
     ),
     points AS (
         SELECT
