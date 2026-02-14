@@ -26,8 +26,10 @@ BEGIN
             ST_Intersection(a.geom, b.geom) AS raw_geom,
             LEAST(a.street_name, b.street_name) AS street_name_1,
             GREATEST(a.street_name, b.street_name) AS street_name_2,
-            a.road_class IN ('A15', 'A63', 'B11', 'B12', 'B13', 'B19')
-                OR b.road_class IN ('A15', 'A63', 'B11', 'B12', 'B13', 'B19') AS is_grade_sep
+            a.road_class IN ('B11', 'B12', 'B13', 'B19')
+                OR b.road_class IN ('B11', 'B12', 'B13', 'B19') AS is_railroad,
+            a.road_class IN ('A15', 'A63')
+                OR b.road_class IN ('A15', 'A63') AS is_highway_or_ramp
         FROM street.street_segment a
         JOIN street.street_segment b
             ON ST_Intersects(a.geom, b.geom)
@@ -43,7 +45,8 @@ BEGIN
             (ST_Dump(raw_geom)).geom AS geom,
             street_name_1,
             street_name_2,
-            is_grade_sep
+            is_railroad,
+            is_highway_or_ramp
         FROM pairs
     )
     SELECT
@@ -51,7 +54,27 @@ BEGIN
         p.street_name_1,
         p.street_name_2,
         p.street_name_1 || ' & ' || p.street_name_2 AS display_text,
-        NOT bool_or(p.is_grade_sep) AS is_valid
+        CASE
+            -- Railroad crossings: always invalid
+            WHEN bool_or(p.is_railroad) THEN false
+            -- No highway/ramp involved: always valid
+            WHEN NOT bool_or(p.is_highway_or_ramp) THEN true
+            -- Ramp connected to its origin or destination road
+            WHEN p.street_name_1 LIKE '%RAMP TO%'
+                 AND p.street_name_1 LIKE '%' || p.street_name_2 || '%' THEN true
+            WHEN p.street_name_2 LIKE '%RAMP TO%'
+                 AND p.street_name_2 LIKE '%' || p.street_name_1 || '%' THEN true
+            -- Ramp split/merge: shared origin or destination
+            WHEN p.street_name_1 LIKE '%RAMP TO%'
+                 AND p.street_name_2 LIKE '%RAMP TO%'
+                 AND (split_part(p.street_name_1, ' RAMP TO ', 1)
+                      = split_part(p.street_name_2, ' RAMP TO ', 1)
+                   OR split_part(p.street_name_1, ' RAMP TO ', 2)
+                      = split_part(p.street_name_2, ' RAMP TO ', 2))
+            THEN true
+            -- Remaining highway/ramp crossings: likely overpass
+            ELSE false
+        END AS is_valid
     FROM points p
     GROUP BY p.street_name_1, p.street_name_2, ST_SnapToGrid(p.geom, 1);
 
