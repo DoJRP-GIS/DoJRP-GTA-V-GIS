@@ -19,6 +19,9 @@ inspect_*.js
 review_db.js
 migrate/
 
+# Migration dump files
+deploy/dumps/
+
 # IDE
 .vscode/
 .idea/
@@ -26,6 +29,9 @@ migrate/
 # OS
 .DS_Store
 Thumbs.db
+
+# Worktrees
+.worktrees/
 
 # Build outputs
 dist/

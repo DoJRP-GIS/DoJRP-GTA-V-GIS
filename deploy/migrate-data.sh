@@ -1,21 +1,46 @@
 #!/bin/bash
 # =============================================================================
-# DoJRP GIS — Migrate Core GTA V Data to Remote Server
+# DoJRP GIS — Migrate Data to Supabase
 # Run this from your LOCAL machine (where the source database lives)
 #
 # Prerequisites:
 #   - Local PostgreSQL running on port 5433 with gisdb
-#   - Remote server set up via setup-server.sh
-#   - pg_dump and pg_restore available locally
+#   - Supabase project created with PostGIS enabled
+#   - supabase-setup.sql already run in Supabase SQL Editor
+#   - .env file with local and remote credentials
+#   - pg_dump and psql available locally
 #
 # Usage: bash deploy/migrate-data.sh
 # =============================================================================
 
 set -euo pipefail
 
+# --- Add PostgreSQL to PATH if not already available ---
+if ! command -v pg_dump &>/dev/null; then
+    for pgdir in "/c/Program Files/PostgreSQL"/*/bin; do
+        if [ -f "$pgdir/pg_dump.exe" ]; then
+            export PATH="$pgdir:$PATH"
+            echo "Found PostgreSQL at: $pgdir"
+            break
+        fi
+    done
+fi
+
+if ! command -v pg_dump &>/dev/null; then
+    echo "ERROR: pg_dump not found. Install PostgreSQL or add it to PATH."
+    exit 1
+fi
+
 # --- Configuration (edit these or use .env) ---
 if [ -f .env ]; then
-    source .env
+    # Strip Windows \r from env values
+    set -a
+    while IFS='=' read -r key val; do
+        [[ "$key" =~ ^#.* || -z "$key" ]] && continue
+        val="${val%$'\r'}"
+        export "$key=$val"
+    done < .env
+    set +a
 fi
 
 LOCAL_HOST="${LOCAL_DB_HOST:-localhost}"
@@ -23,11 +48,12 @@ LOCAL_PORT="${LOCAL_DB_PORT:-5433}"
 LOCAL_DB="${LOCAL_DB_NAME:-gisdb}"
 LOCAL_USER="${LOCAL_DB_USER:-postgres}"
 
-# Remote connection — must be set
-REMOTE_HOST="${REMOTE_DB_HOST:?Set REMOTE_DB_HOST in .env}"
-REMOTE_PORT="${REMOTE_DB_PORT:-5432}"
-REMOTE_DB="${REMOTE_DB_NAME:-gisdb}"
-REMOTE_USER="${REMOTE_DB_USER:-gisuser}"
+# Supabase connection — must be set
+REMOTE_HOST="${SUPABASE_DB_HOST:?Set SUPABASE_DB_HOST in .env}"
+REMOTE_PORT="${SUPABASE_DB_PORT:-5432}"
+REMOTE_DB="${SUPABASE_DB_NAME:-postgres}"
+REMOTE_USER="${SUPABASE_DB_USER:-postgres}"
+REMOTE_PASSWORD="${SUPABASE_DB_PASSWORD:?Set SUPABASE_DB_PASSWORD in .env}"
 
 DUMP_DIR="./deploy/dumps"
 mkdir -p "$DUMP_DIR"
@@ -35,28 +61,13 @@ mkdir -p "$DUMP_DIR"
 # Core GTA V schemas to migrate
 SCHEMAS=("address" "fire" "incidents" "map" "police" "street")
 
-# Tables to EXCLUDE (reference data, backups, test tables)
-EXCLUDE_TABLES=(
-    "address.la_cams_address_lines"
-    "address.la_cams_address_points"
-    "address.la_lacounty_parcels"
-    "address.address_cids_info_cross_backup"
-    "address.address_cids_info_test"
-)
-
-echo "=== DoJRP GIS Data Migration ==="
+echo "=== DoJRP GIS Data Migration to Supabase ==="
 echo "Source: ${LOCAL_USER}@${LOCAL_HOST}:${LOCAL_PORT}/${LOCAL_DB}"
 echo "Target: ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PORT}/${REMOTE_DB}"
 echo ""
 
-# Build exclude flags
-EXCLUDE_FLAGS=""
-for table in "${EXCLUDE_TABLES[@]}"; do
-    EXCLUDE_FLAGS="$EXCLUDE_FLAGS --exclude-table=$table"
-done
-
 # --- Step 1: Dump each schema ---
-echo "[1/3] Dumping core schemas from local database..."
+echo "[1/4] Dumping core schemas from local database..."
 
 for schema in "${SCHEMAS[@]}"; do
     echo "  Dumping ${schema}..."
@@ -66,7 +77,6 @@ for schema in "${SCHEMAS[@]}"; do
         -U "$LOCAL_USER" \
         -d "$LOCAL_DB" \
         -n "$schema" \
-        $EXCLUDE_FLAGS \
         -Fc \
         -f "${DUMP_DIR}/${schema}.dump"
 
@@ -78,15 +88,14 @@ TOTAL_SIZE=$(du -sh "$DUMP_DIR" | cut -f1)
 echo ""
 echo "  Total dump size: ${TOTAL_SIZE}"
 
-# --- Step 2: Restore to remote ---
+# --- Step 2: Restore to Supabase ---
 echo ""
-echo "[2/3] Restoring to remote database..."
-echo "  (You will be prompted for the remote password)"
+echo "[2/4] Restoring to Supabase..."
 echo ""
 
 for schema in "${SCHEMAS[@]}"; do
     echo "  Restoring ${schema}..."
-    PGPASSWORD="${REMOTE_DB_PASSWORD}" pg_restore \
+    PGPASSWORD="${REMOTE_PASSWORD}" pg_restore \
         -h "$REMOTE_HOST" \
         -p "$REMOTE_PORT" \
         -U "$REMOTE_USER" \
@@ -100,11 +109,28 @@ for schema in "${SCHEMAS[@]}"; do
     echo "    -> done"
 done
 
-# --- Step 3: Verify ---
+# --- Step 3: Re-grant permissions (pg_restore --clean drops them) ---
 echo ""
-echo "[3/3] Verifying migration..."
+echo "[3/4] Granting PostgREST permissions..."
 
-PGPASSWORD="${REMOTE_DB_PASSWORD}" psql \
+PGPASSWORD="${REMOTE_PASSWORD}" psql \
+    -h "$REMOTE_HOST" \
+    -p "$REMOTE_PORT" \
+    -U "$REMOTE_USER" \
+    -d "$REMOTE_DB" \
+    -c "
+$(for schema in "${SCHEMAS[@]}"; do
+    echo "GRANT USAGE ON SCHEMA ${schema} TO anon, authenticated;"
+    echo "GRANT SELECT ON ALL TABLES IN SCHEMA ${schema} TO anon, authenticated;"
+done)
+"
+echo "    -> done"
+
+# --- Step 4: Verify ---
+echo ""
+echo "[4/4] Verifying migration..."
+
+PGPASSWORD="${REMOTE_PASSWORD}" psql \
     -h "$REMOTE_HOST" \
     -p "$REMOTE_PORT" \
     -U "$REMOTE_USER" \
@@ -128,5 +154,8 @@ echo ""
 echo "  Dump files saved in ${DUMP_DIR}/"
 echo "  You can delete them after verifying."
 echo ""
-echo "  Next: Run setup-featureserv.sh on the server."
+echo "  Next steps:"
+echo "    1. Run supabase-geojson.sql in the SQL Editor"
+echo "    2. Add schemas to Supabase > Settings > API > Exposed schemas"
+echo "    3. Test: curl https://<project>.supabase.co/rest/v1/rpc/geojson_jurisdictions"
 echo "============================================="
